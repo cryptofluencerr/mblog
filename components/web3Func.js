@@ -1,5 +1,8 @@
 import { toast } from "react-toastify";
 
+/* I have made this function so I can use metamask function according to 
+my own convenience anywhere I can, so I dont have to write code in each page */
+
 const getAccounts = async () => {
   if (window.ethereum) {
     let accounts = await window.ethereum

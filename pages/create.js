@@ -11,6 +11,7 @@ const Create = () => {
   let router = useRouter();
 
   useEffect(() => {
+    // To understand this refer to Navbar's comment inside Useeffect
     if (window.ethereum) {
       (async () => {
         if (!account) {
@@ -30,12 +31,16 @@ const Create = () => {
     }
   }, [account]);
 
+  // This function is posting data to DB if the user have connected Metamask wallet
   const onSubmit = async () => {
     if (window.ethereum) {
       if (account) {
         const collectionRef = collection(db, "mblog");
+
+        // Posting the Blog in DB
         await addDoc(collectionRef, {
           ...detail,
+          // address being stored in lowercase because to check the address further
           address: account.toLowerCase(),
           timestamp: serverTimestamp(),
         });

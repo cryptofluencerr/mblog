@@ -12,11 +12,16 @@ import Card from "../components/Card";
 import getAccounts from "../components/web3Func";
 import Link from "next/link";
 
+/* This page fetches the person's blog if it is connected with Metamask
+and also if they have posted any blog
+*/
+
 function Dashboard() {
   const [account, updateAccount] = useState(null);
   const [blogs, setBlogs] = useState([]);
 
   useEffect(() => {
+    // To understand this refer to Navbar's comment inside Useeffect
     if (window.ethereum) {
       (async () => {
         if (!account) {
@@ -55,11 +60,15 @@ function Dashboard() {
   }, []);
 
   return (
-    <div className=" overflow-auto bg-black h-screen p-10 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+    <div className=" overflow-auto p-10 flex flex-wrap gap-5">
       {account ? (
+        // If it is connected with metamsk then only the Blog will be fetched
         blogs.map(
           (blog) =>
             blog.address == account.toLowerCase() && (
+              /* If the connected account is equal to the stored address
+               then only the Blog will be fetched 
+              */
               <div key={blog.id}>
                 <Link href="/blog/[id]" as={`/blog/${blog.id}`}>
                   <a>
@@ -77,6 +86,9 @@ function Dashboard() {
             )
         )
       ) : (
+        /**
+         else Connect Metamask button will be shown
+         */
         <div className="justify-start items-center">
           <button
             type="button"

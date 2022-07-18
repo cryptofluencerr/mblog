@@ -12,6 +12,7 @@ import moment from "moment";
 import { toast } from "react-toastify";
 import getAccounts from "../../components/web3Func";
 
+// id being fetched with SSR Server Side Rendering
 function Blog({ id }) {
   const [account, updateAccount] = useState(null);
   const [detail, setDetail] = useState({
@@ -19,21 +20,22 @@ function Blog({ id }) {
     description: "",
     timestamp: "",
     id: "",
-    address: "",
   });
   let router = useRouter();
 
   useEffect(() => {
     (async () => {
+      // Fetching data from DB with the help of id
       const docRef = doc(db, "mblog", id);
       try {
         const docSnap = await getDoc(docRef);
+        // If data exists then set the State
         if (docSnap.exists()) {
           setDetail({
             ...detail,
             title: docSnap.data().title,
             description: docSnap.data().description,
-            timestamp: docSnap.data().timestamp,
+            timestamp: docSnap.data().timestamp?.toDate().getTime(),
             address: docSnap.data().address,
             id: id,
           });
@@ -62,32 +64,56 @@ function Blog({ id }) {
         });
       });
     }
-  }, []);
+  }, [account]);
 
+  /* If the blog owner have posted an update 
+  the blog gets updated and the owner is routed to the homepage 
+  */
   const onSubmit = async () => {
-    console.log(detail);
-
     if (detail?.hasOwnProperty("timestamp")) {
-      console.log(id);
       const docRef = doc(db, "mblog", id);
-      // const blogUpdated = ;
+
+      // Updating the Blog in DB
       await updateDoc(docRef, { ...detail, timestamp: serverTimestamp() });
-      setDetail({ title: "", description: "", timestamp: "", id: "" });
-      router.push("/");
+
+      toast.success(`Successfully updated ${detail.title}`);
+
+      setDetail({
+        title: "",
+        description: "",
+        timestamp: "",
+        id: "",
+        address: "",
+      });
+
+      // User being redirected to the homepage
+      setTimeout(() => router.push("/"), 3000);
     } else {
       const collectionRef = doc(db, "mblog");
       // const blogUpdated = ;
       const docRef = await addDoc(collectionRef, {
         ...detail,
         timestamp: serverTimestamp(),
+        address: account,
       });
-      setDetail({ title: "", description: "", timestamp: "", id: "" });
+
+      setDetail({
+        title: "",
+        description: "",
+        timestamp: "",
+        id: "",
+        address: "",
+      });
       router.push("/");
     }
   };
 
+  /* If the blog owner deletes the blog,
+  it gets deleted and the owner is redirected to the homepage 
+  */
   const deleteBlog = async () => {
     const docRef = doc(db, "mblog", id);
+    // Deleting the Blog from DB
     await deleteDoc(docRef);
     toast.success(`Deleted ${detail.title}`);
     router.push("/");
@@ -104,6 +130,7 @@ function Blog({ id }) {
             >
               Title
             </label>
+
             <input
               label="title"
               value={detail.title}
@@ -113,6 +140,12 @@ function Blog({ id }) {
               placeholder="Enter Title..."
               className="block p-2 w-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300 sm:text-xs focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             />
+          </div>
+          <div className="text-white mt-5 truncate">By: {detail.address}</div>
+
+          <div className="text-white mt-5 truncate">
+            Last Updated:{" "}
+            {moment(detail.timestamp.seconds).format("MMM Do YY, h:mm:ss a")}
           </div>
           <div className="py-5 max-w-2xl">
             <label
@@ -136,6 +169,10 @@ function Blog({ id }) {
           </div>
 
           {account && detail.address === account && (
+            /* If an account is there the account is equal to the address who have
+            posted this blog then only button shows up,
+            so this requires Metamask
+            */
             <div>
               <button
                 onClick={onSubmit}
@@ -163,6 +200,7 @@ function Blog({ id }) {
 
 export default Blog;
 
+// Server Side rendering in next.js
 Blog.getInitialProps = ({ query }) => {
   return {
     id: query.id,
